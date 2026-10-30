@@ -1,0 +1,82 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box}
+body{width:500px;font-family:Inter,system-ui,Arial,sans-serif;margin:0;color:#f1f5f9;background:#08080d}
+@media (min-width:600px){body{width:100%;max-width:920px;margin:0 auto} #list{max-height:460px}}
+.header{background:radial-gradient(600px 200px at 85% 0%,rgba(79,124,255,.45),transparent 60%),linear-gradient(135deg,#000,#11111c 55%,#16224d);color:#fff;padding:20px 22px;border-bottom:1px solid #26262e;display:flex;gap:14px;align-items:center}
+.logo{width:48px;height:48px;flex:0 0 48px;border-radius:14px;background:linear-gradient(135deg,#4f7cff,#00c2ff);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;box-shadow:0 8px 24px rgba(79,124,255,.45)}
+.header h2{margin:0;font-size:22px;letter-spacing:-.3px}
+.brand{font-weight:800;letter-spacing:1.5px;font-size:12px;color:#00c2ff;margin-top:2px}
+.header p{margin:6px 0 0;font-size:12px;opacity:.8}
+.main{padding:16px}
+.card{background:linear-gradient(180deg,#15151f,#12121a);border:1px solid #26262e;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+.card h3{margin:0 0 12px;font-size:13px;letter-spacing:1px;color:#94a3b8;text-transform:uppercase}
+label{font-size:12px;font-weight:700;color:#cbd5e1}
+input,button,select{width:100%;padding:10px 12px;margin:5px 0 11px;border:1px solid #33333f;border-radius:12px;font-size:13px;background:#1c1c28;color:#f1f5f9;transition:border-color .15s,box-shadow .15s,transform .1s}
+input:focus,select:focus{outline:none;border-color:#4f7cff;box-shadow:0 0 0 3px rgba(79,124,255,.25)}
+input::placeholder{color:#64748b}
+button{cursor:pointer;background:#26262e;color:#fff;border:none;font-weight:800}
+button:hover:not(:disabled){transform:translateY(-1px)}
+button:active:not(:disabled){transform:translateY(0)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.primary{background:#1f2937;color:#fff;border:1px solid #4f7cff;box-shadow:none}
+button.red{background:#2a1214;color:#fca5a5;border:1px solid #dc2626;box-shadow:none}
+.row{display:flex;gap:8px}.row button{flex:1}
+#list{max-height:260px;overflow:auto;border:1px solid #26262e;border-radius:12px;padding:6px;background:#0d0d14}
+#list div{padding:7px 6px;border-bottom:1px solid #1e1e2a;border-radius:8px}
+#list div:hover{background:#17171f}
+#list input{width:auto;margin:0 6px 0 0;accent-color:#4f7cff}
+#status{font-size:13px;font-weight:600;color:#e2e8f0;min-height:18px}
+.spinner{width:26px;height:26px;border:3px solid #26262e;border-top:3px solid #00c2ff;border-radius:50%;animation:spin 1s linear infinite;display:none;margin:10px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progress-wrap{background:#26262e;border-radius:999px;height:16px;overflow:hidden;display:none;box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
+.progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#4f7cff,#00c2ff,#22d3ee);transition:width .3s;position:relative}
+.progress-bar:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:shine 1.6s linear infinite}
+@keyframes shine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.stats{display:flex;gap:8px;margin-top:12px}
+.stat{flex:1;background:#0d0d14;border:1px solid #26262e;border-radius:12px;padding:10px 6px;text-align:center}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:11px;color:#94a3b8}
+#statDone{color:#34d399}#statLeft{color:#38bdf8}#statFailed{color:#f87171}
+#progressText{font-size:12px;color:#94a3b8;margin-top:10px;text-align:center}
+.footer{padding:14px;text-align:center;font-size:11px;color:#64748b}
+</style></head><body>
+<div class="header"><div class="logo">JP</div><div><h2>FB Page Post Remover</h2><div class="brand">JioPaglaLtd</div><p>Delete Page posts via API — fast, clean, with live progress.</p></div></div>
+<div class="main">
+<div class="card"><h3>01 — Connect your Page</h3>
+<button id="openTab" class="primary">Open in New Tab (recommended)</button>
+<label>User Access Token (never saved)</label><input id="userToken" type="password" placeholder="User Access Token">
+<button id="loadPages" class="primary">Load My Pages</button>
+<label>Select Page</label><select id="pageSelect"></select>
+<label>Page ID</label><input id="pageId" placeholder="Page ID">
+<label>Page Access Token (never saved)</label><input id="pageToken" type="password" placeholder="Page Access Token">
+<button id="collect" class="primary">Load Posts</button>
+<div class="spinner" id="spinner"></div>
+<div id="status">Ready.</div>
+</div>
+<div class="card"><h3>02 — Posts &amp; Delete</h3>
+<div class="row"><button id="checkAll">Check All</button><button id="uncheckAll">Uncheck All</button><button id="exportCsv">Export CSV</button></div>
+<div id="list"></div>
+<label>How many? (0 = all)</label><input id="count" type="number" value="0" min="0">
+<label>Workers (1-10, 1 = safest, 10 = fastest)</label><input id="workers" type="number" value="1" min="1" max="10">
+<label>Delay (seconds) — lower = faster, higher = fewer Meta errors</label><input id="delay" type="number" value="1" min="0" max="30">
+<label>Remove All confirmation — type REMOVE-ALL</label><input id="confirm" placeholder="REMOVE-ALL">
+<div class="row"><button id="removeSel">Remove Selected</button><button id="removeAll" class="red">Remove All</button></div>
+<button id="stopBtn" class="red" disabled>Stop</button>
+<button id="retryFailed" style="display:none">Retry Failed Only</button>
+</div>
+<div class="card"><h3>03 — Progress</h3>
+<div class="progress-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+<div class="stats">
+<div class="stat"><b id="statTotal">0</b><span>Total</span></div>
+<div class="stat"><b id="statDone">0</b><span>Done</span></div>
+<div class="stat"><b id="statLeft">0</b><span>Remaining</span></div>
+<div class="stat"><b id="statFailed">0</b><span>Failed</span></div>
+</div>
+<div id="progressText"></div>
+</div>
+</div>
+<div class="footer">© JioPaglaLtd — FB Page Post Remover</div>
+<script src="popup.js"></script>
+</body></html>
